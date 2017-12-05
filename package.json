@@ -1,0 +1,9 @@
+{
+  "name": "talk-encodings",
+  "version": "1.0.0",
+  "author": "Friedrich von Never",
+  "license": "MIT",
+  "dependencies": {
+    "reveal.js": "^3.6.0"
+  }
+}
