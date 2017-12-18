@@ -27,352 +27,122 @@
                         </footer>
 
                         <aside class="notes">
-                            Сегодня мы поговорим о том, что такое изоморфные
-                            приложения, и какие есть современные подходы к их
-                            разработке на стеке .NET.
+                            Сегодня мы поговорим про текстовые кодировки — как
+                            текстовая информация кодируется компьютером, какие
+                            у этого процесса есть подводные камни, как правильно
+                            работать с текстом.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## Схема работы веб-приложения
-
-                        ![Запросы к
-                        веб-приложению](images/architecture-classic.svg)
-
+                        ## История кодировок
 
                         <aside class="notes">
-                            Вспомним, как работают обычные современные
-                            веб-приложения (под «современными» я имею в виду
-                            приложения, которые активно используют JavaScript и
-                            манипуляции разметкой на клиенте — в первую очередь
-                            использующие такие библиотеки, как Angular или
-                            React).
-
-                            Браузерный клиент делает запрос к серверу, и
-                            получает разметку и скрипты в ответ. Это самый
-                            обычный запрос, и вообще все приложения делают так
-                            же.
-
-                            После того, как клиент подгрузил скрипты, разметкой
-                            управляют именно они: скрипты общаются с сервером,
-                            передавая туда и получая обратно JSON. HTML мы с
-                            этого момента уже не передаём.
-
-                            У этой схемы есть и преимущества, и недостатки.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## Схема работы веб-приложения
-
-                        ![Запросы к
-                        веб-приложению](images/architecture-classic.svg)
-
-                        - `+` существенное упрощение серверного кода
-                        - `+` уменьшение трафика
-                        - `+` возможность использования API другими клиентами
+                        ## Однобайтовые кодировки
 
                         <aside class="notes">
-                            Основное преимущество — архитектурное: нам больше не
-                            нужно на сервере поддерживать инфраструктуру для
-                            рендеринга HTML-разметки. Практика показывает, что
-                            это отлично развязывает код и делает его чище.
-                            Клиентскую часть могут делать люди, которые хорошо
-                            разбираются в JS и HTML, а серверную — те, кто
-                            хорошо понимает ASP.NET, и эти люди друг другу не
-                            мешают.
-
-                            Помимо этого, есть преимущество в плане трафика —
-                            понятно, что, если мы не дублируем большой HTML на
-                            каждый запрос, то трафик это уменьшает.
-
-                            Помимо этого, сегодня в приложениях
-                            энтерпрайз-класса часто возникает надобность либо
-                            разработать мобильное приложение и веб-часть
-                            отдельно, или интегрироваться с какими-то внешними
-                            сервисами или клиентами. Часто эти внешние участки
-                            могут использовать тот же самый API.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## Схема работы веб-приложения
-
-                        ![Запросы к
-                        веб-приложению](images/architecture-classic.svg)
-
-                        - `-` увеличенное количество запросов
-                        - `-` плохая совместимость с SEO
+                        ## Многобайтовые кодировки
 
                         <aside class="notes">
-                            Теперь рассмотрим недостатки.
-
-                            Итак, запросов в принципе становится больше. Если
-                            раньше пользователь мог загрузить разметку, и сразу
-                            начинать пользоваться сайтом, когда у него
-                            докрутился прогресс-бар в браузере, то больше он
-                            этого сделать не может. Сначала браузер всё
-                            докачивает, потом отрабатывают скрипты, ещё раз идут
-                            на сервер уже по API, и только потом заканчивают
-                            работу. В это время мы либо показываем пользователю
-                            ещё один прогресс-бар уже в приложении, либо
-                            показываем ему какие-то обрывки шаблонов и мешанину
-                            разметки (что, вообще-то, в высококачественном
-                            приложении недопустимо).
-
-                            Помимо этого, у поисковых движков совместимость с
-                            такими приложениями крайне ограничена. Да, сегодня
-                            основные поисковики (Яндекс и Google) пытаются
-                            понемногу индексировать такие сайты, но до сих пор
-                            делают это не идеально. О менее распространённых
-                            поисковиках говорить не приходится (а вы удивитесь,
-                            какие странные бывают заказчики и пользователи;
-                            некоторым это бывает важно).
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## Схема работы изоморфного приложения
-
-                        ![Запросы к изоморфному
-                        веб-приложению](images/architecture-isomorphic.svg)
+                        ## Unicode
 
                         <aside class="notes">
-                            А теперь посмотрим, чем отличается изоморфное
-                            веб-приложение. Сегодня, в 2017 году, у нас есть
-                            способ выполнить наш JavaScript-код на сервере: это
-                            платформа Node.js.
-
-                            Когда клиент просит у приложения отдать ему
-                            начальный пакет разметки и скриптов, сервер сначала
-                            просит Node.js обработать клиентские компоненты и
-                            сгенерировать по ним настоящую, полноценную
-                            разметку, и уже эти данные отдаёт клиенту. Сразу же,
-                            с данными первого запроса клиент получает все нужные
-                            данные для отображения странички. У нас становится
-                            на несколько HTTP-запросов меньше, а те клиенты,
-                            которые не поддерживают выполнение JS (в первую
-                            очередь поисковые роботы) получают полноценный
-                            контент странички.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## JavaScriptServices
-
-                        https://github.com/aspnet/JavaScriptServices
-
-                        ![Страничка на
-                        GitHub](images/github-javascriptservices.png)
+                        ## Трансформации Unicode
 
                         <aside class="notes">
-                            К счастью, нам не придётся городить свой собственный
-                            огород для того, чтобы организовать общение нашего
-                            сервера с Node.js, поддерживать пул процессов и пр.
-
-                            Microsoft всё сделали за нас, и для ASP.NET Core
-                            доступен пакет библиотек, который имеет общее
-                            название JavaScriptServices.
-
-                            Собственно библиотека состоит из двух частей:
-                            низкоуровневые NodeServices и высокоуровные
-                            SpaServices.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## NodeServices
-
-                        ```javascript
-                        // addNumbers.js
-                        module.exports = function (callback, first, second) {
-                            var result = first + second;
-                            callback(/* error */ null, result);
-                        };
-                        ```
-
-                        ```csharp
-                        // MyController.cs
-                        public async Task<IActionResult> MyAction(
-                            [FromServices] INodeServices nodeServices)
-                        {
-                            var result = await nodeServices.InvokeAsync<int>(
-                                "./addNumbers", 1, 2);
-                            return Content("1 + 2 = " + result);
-                        }
-                        ```
+                        ## UCS-2
 
                         <aside class="notes">
-                            Вот так выглядит пример на NodeServices. Эта
-                            библиотека позволяет асинхронно вызывать
-                            произвольный JS-код, оформленный в виде модуля
-                            Node.js.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## SpaServices: cshtml
-
-                        ```csharp
-                        <!-- MyAction.html -->
-                        <div id="my-spa" asp-prerender-module="ClientApp/boot-server"
-                             asp-prerender-data="new {
-                                 IsGoldUser = true,
-                                 Cookies = ViewContext.HttpContext.Request.Cookies
-                             }"></div>
-                        ```
+                        ## UTF-32
 
                         <aside class="notes">
-                            Работа полноценного варианта SpaServices
-                            основывается на трёх компонентах: хелперы в cshtml,
-                            серверный JS, клиентский JS.
-
-                            Вот так выглядит код, который вставляется в cshtml.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## SpaServices: серверный JS
-
-                        ```javascript
-                        // boot-server.js
-                        var prerendering = require('aspnet-prerendering');
-                        module.exports = prerendering.createServerRenderer((params) => {
-                            return new Promise(function (resolve, reject) {
-                                var result = '<h1>Hello world!</h1>'
-                                    + '<p>Is gold user: ' +
-                                        params.data.isGoldUser + '</p>'
-                                    + '<p>Number of cookies: ' +
-                                        params.data.cookies.length + '</p>';
-                                resolve({ html: result,
-                                          globals: {
-                                              albumsList: someDataHere,
-                                              userData: someMoreDataHere
-                                          } }); }); });
-                        ```
+                        ## UTF-16
 
                         <aside class="notes">
-                            Вот так выглядит серверный JS. Данный пример
-                            отрендерит подготовленный HTML, а также заполнит
-                            переменные `window.albumsList` и `window.userData`
-                            какими-то данными, вычисленными на сервере в
-                            JS-коде.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## SpaServices: React
-
-                        ```javascript
-                        // boot-client.js
-                        const initialState = (window as any).initialReduxState;
-                        const store = configureStore(initialState);
-                        const history = syncHistoryWithStore(browserHistory, store);
-
-                        ReactDOM.render(
-                            <Provider store={ store }>
-                                <Router history={ history } children={ routes } />
-                            </Provider>,
-                            document.getElementById('react-app')
-                        );
-                        ```
+                        ## Суррогатные пары
 
                         <aside class="notes">
-                            Конечно, предыдущий пример выглядит очень
-                            специфическим и упрощённым, потому что он не
-                            учитывает ещё одной особенности современных
-                            веб-приложений: роутинга. Понятно, что никто не
-                            хочет делать кучу JS-файлов для разных страниц. А,
-                            если серверный код не будет поддерживать клиентский
-                            роутинг, то придётся это делать (потому что на
-                            разных страницах в приложении обычно размещаются
-                            разные компоненты).
-
-                            Поэтому давайте рассмотрим вот такой простой пример
-                            приложения на React с react-router и redux. Импорты
-                            я опускаю для упрощения кода. (Если нужно, всё это
-                            есть в шаблоне приложения, доступном через `dotnet
-                            new`.)
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## SpaServices: React (сервер)
-
-                        ```javascript
-                        import { match } from 'react-router';
-                        import routes from './routes';
-                        export default createServerRenderer(params => {
-                          return new Promise((resolve, reject) => {
-                            match({ routes, location: params.location },
-                              (error, redirectLocation, renderProps: any) => {
-                              const app = (
-                                <Provider store={ store }>
-                                  <RouterContext {...renderProps} />
-                                </Provider>);
-                              params.domainTasks.then(() => {
-                                resolve({ html: renderToString(app),
-                                  globals: { initialReduxState: store.getState() } });
-                              }, reject); }); }); });
-                        ```
+                        ## Астральные символы
 
                         <aside class="notes">
-                            А вот так выглядит изрядно сокращённый вариант
-                            серверного кода. Как видно, подменяется только один
-                            основной файл приложения; весь клиентский код
-                            полностью переиспользуется сервером. Роутинг
-                            работает за счёт специальной функции `match`,
-                            которая входит в состав `react-router`.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## SpaServices: что ещё
-
-                        - интеграция с webpack + hot module replacement
-                        - Angular, Knockout, Vue, Aurelia...
-                        - TypeScript
+                        ## UTF-8
 
                         <aside class="notes">
-                            Мы не успели обсудить множество дополнительных
-                            возможностей, которые предоставляет библиотека
-                            JavaScriptServices. Количество дополнительных фич
-                            просто огромно, а инструкции по их настройке
-                            занимают экраны текста.
                         </aside>
                     </script>
                 </section>
                 <section data-markdown>
                     <script type="text/template">
-                        ## SpaServices: шаблон приложения
-
-                        ```bash
-                        $ dotnet new --install Microsoft.AspNetCore.SpaTemplates::*
-                        $ dotnet new reactredux # aurelia,                    \
-                        $                       # angular,                    \
-                        $                       # knockout,                   \
-                        $                       # react,                      \
-                        $                       # vue
-                        ```
+                        ## Некорректные последовательности байтов
 
                         <aside class="notes">
-                            К счастью, есть обширный набор примеров и шаблонов
-                            проектов, которые доступны с помощью стандартного
-                            механизма шаблонов в инструментарии `dotnet`: можно
-                            установить и развернуть шаблоны с помощью командной
-                            строки, а потом работать с ними из Visual Studio или
-                            VSCode.
+                        </aside>
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Работа с текстом в виде байтов
+
+                        <aside class="notes">
+                        </aside>
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Перекодирование текста из неверной кодировки
+
+                        <aside class="notes">
                         </aside>
                     </script>
                 </section>
@@ -381,7 +151,7 @@
                         ## Это конец
 
                         <br/><br/><br/>
-                        <small>Слайды доступны в репозитории https://github.com/ForNeVeR/talk-javascriptservices</small>
+                        <small>Слайды доступны в репозитории https://github.com/ForNeVeR/talk-encodings</small>
                     </script>
                 </section>
             </div>
